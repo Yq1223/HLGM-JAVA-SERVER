@@ -22,8 +22,8 @@ mybatis-plus:
 
 # 微信小程序配置
 wechat:
-  appid: your_appid
-  secret: your_secret
+  appid: wx74d1dae41082b9d5
+  secret: 5e7c93f81db16c9ee86a4c7233aa1f3b
 
 # JWT配置
 jwt:
