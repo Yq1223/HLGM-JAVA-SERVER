@@ -4,6 +4,7 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wool.common.*;
@@ -49,12 +50,14 @@ public class WoolInfoServiceImpl implements WoolInfoService {
     @Override
     public Page<WoolInfoVO> listOnline(int pageNum, int pageSize, String keyword) {
         Page<WoolInfo> page = new Page<>(pageNum, pageSize);
-        LambdaQueryWrapper<WoolInfo> wrapper = new LambdaQueryWrapper<WoolInfo>()
-                .eq(WoolInfo::getStatus, WoolStatus.ONLINE.code)
-                .like(StringUtils.hasText(keyword), WoolInfo::getTitle, keyword)
-                .orderByDesc(WoolInfo::getCreatedAt);
+        QueryWrapper<WoolInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("status", WoolStatus.ONLINE.code)
+               .like(StringUtils.hasText(keyword), "title", keyword)
+               .orderByDesc("created_at");
 
+        log.info("查询已上线信息: status={}, keyword={}", WoolStatus.ONLINE.code, keyword);
         Page<WoolInfo> result = woolInfoMapper.selectPage(page, wrapper);
+        log.info("查询结果: total={}, records={}", result.getTotal(), result.getRecords().size());
         return convertPage(result);
     }
 
