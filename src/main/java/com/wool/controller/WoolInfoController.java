@@ -5,8 +5,10 @@ import com.wool.common.Constants;
 import com.wool.common.R;
 import com.wool.dto.WoolInfoDTO;
 import com.wool.service.WoolInfoService;
+import com.wool.vo.ImportResultVO;
 import com.wool.vo.WoolInfoVO;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -93,5 +95,17 @@ public class WoolInfoController {
         Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
         Page<WoolInfoVO> page = woolInfoService.myList(userId, pageNum, pageSize);
         return R.ok(page);
+    }
+
+    /**
+     * 批量导入薅羊毛信息
+     * POST /api/wool/import
+     * Content-Type: multipart/form-data
+     */
+    @PostMapping("/import")
+    public R<ImportResultVO> importExcel(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
+        ImportResultVO result = woolInfoService.batchImport(file, userId);
+        return R.ok(result);
     }
 }

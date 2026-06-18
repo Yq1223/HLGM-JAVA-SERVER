@@ -11,6 +11,7 @@ com\wool\util\JwtUtil.class
 com\wool\service\AuthService.class
 com\wool\service\WoolInfoService.class
 com\wool\controller\AdminController.class
+com\wool\vo\ImportResultVO.class
 com\wool\mapper\ExchangeRecordMapper.class
 com\wool\common\Constants.class
 com\wool\config\MybatisPlusConfig.class
@@ -30,6 +31,7 @@ com\wool\service\PointsService.class
 com\wool\controller\AuthController.class
 com\wool\common\PointsChangeType.class
 com\wool\vo\LoginVO.class
+com\wool\dto\WoolInfoImportDTO.class
 com\wool\entity\ExchangeGoods.class
 com\wool\common\GlobalExceptionHandler.class
 com\wool\vo\PointsLogVO.class
@@ -40,4 +42,5 @@ com\wool\service\impl\ExchangeServiceImpl.class
 com\wool\dto\AuditDTO.class
 com\wool\dto\WoolInfoDTO.class
 com\wool\controller\PointsController.class
+com\wool\service\impl\WoolInfoServiceImpl$1.class
 com\wool\WoolApplication.class

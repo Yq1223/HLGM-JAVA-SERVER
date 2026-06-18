@@ -1,17 +1,22 @@
 package com.wool.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.read.listener.ReadListener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wool.common.*;
 import com.wool.dto.AuditDTO;
 import com.wool.dto.WoolInfoDTO;
+import com.wool.dto.WoolInfoImportDTO;
 import com.wool.entity.User;
 import com.wool.entity.WoolInfo;
 import com.wool.mapper.UserMapper;
 import com.wool.mapper.WoolInfoMapper;
 import com.wool.service.PointsService;
 import com.wool.service.WoolInfoService;
+import com.wool.vo.ImportResultVO;
 import com.wool.vo.WoolInfoVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +24,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -216,6 +224,73 @@ public class WoolInfoServiceImpl implements WoolInfoService {
 
         Page<WoolInfo> result = woolInfoMapper.selectPage(page, wrapper);
         return convertPage(result);
+    }
+
+    @Override
+    @Transactional
+    public ImportResultVO batchImport(MultipartFile file, Long userId) {
+        ImportResultVO result = new ImportResultVO();
+        List<WoolInfoImportDTO> dataList = new ArrayList<>();
+
+        // 1. 读取Excel文件
+        try {
+            EasyExcel.read(file.getInputStream(), WoolInfoImportDTO.class, new ReadListener<WoolInfoImportDTO>() {
+                @Override
+                public void invoke(WoolInfoImportDTO data, AnalysisContext context) {
+                    dataList.add(data);
+                }
+
+                @Override
+                public void doAfterAllAnalysed(AnalysisContext context) {
+                    // 读取完成
+                }
+            }).sheet().doRead();
+        } catch (Exception e) {
+            log.error("Excel文件读取失败", e);
+            throw new BizException("Excel文件读取失败，请检查文件格式");
+        }
+
+        if (dataList.isEmpty()) {
+            throw new BizException("Excel文件中没有数据");
+        }
+
+        // 2. 逐行校验并插入
+        for (int i = 0; i < dataList.size(); i++) {
+            WoolInfoImportDTO dto = dataList.get(i);
+            int rowNum = i + 2; // Excel行号(第1行是表头)
+
+            // 校验必填字段
+            if (!StringUtils.hasText(dto.getTitle())) {
+                result.addFail("第" + rowNum + "行: 标题不能为空");
+                continue;
+            }
+            if (dto.getTitle().length() > 128) {
+                result.addFail("第" + rowNum + "行: 标题长度不能超过128个字符");
+                continue;
+            }
+            if (!StringUtils.hasText(dto.getContent())) {
+                result.addFail("第" + rowNum + "行: 内容不能为空");
+                continue;
+            }
+
+            // 构建实体并插入
+            WoolInfo info = new WoolInfo();
+            info.setUserId(userId);
+            info.setTitle(dto.getTitle().trim());
+            info.setContent(dto.getContent().trim());
+            info.setCategory(dto.getCategory() != null ? dto.getCategory().trim() : "");
+            info.setSourceUrl(dto.getSourceUrl() != null ? dto.getSourceUrl().trim() : "");
+            info.setClaimSteps(dto.getClaimSteps() != null ? dto.getClaimSteps().trim() : "");
+            info.setStatus(WoolStatus.PENDING.code);
+            info.setViewCount(0);
+
+            woolInfoMapper.insert(info);
+            result.addSuccess();
+            log.info("批量导入: 用户[{}]导入信息[id={}]，标题={}", userId, info.getId(), info.getTitle());
+        }
+
+        log.info("批量导入完成: 成功{}条, 失败{}条", result.getSuccessCount(), result.getFailCount());
+        return result;
     }
 
     // ---------- 辅助方法 ----------

@@ -3,7 +3,9 @@ package com.wool.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wool.dto.AuditDTO;
 import com.wool.dto.WoolInfoDTO;
+import com.wool.vo.ImportResultVO;
 import com.wool.vo.WoolInfoVO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface WoolInfoService {
 
@@ -56,4 +58,13 @@ public interface WoolInfoService {
      * 查询我的信息
      */
     Page<WoolInfoVO> myList(Long userId, int pageNum, int pageSize);
+
+    /**
+     * 批量导入薅羊毛信息
+     *
+     * @param file   Excel文件(.xlsx)
+     * @param userId 当前用户ID
+     * @return 导入结果(成功数/失败数/失败详情)
+     */
+    ImportResultVO batchImport(MultipartFile file, Long userId);
 }
