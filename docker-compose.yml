@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: wool-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456789
+      MYSQL_DATABASE: wool_db
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      # 数据库初始化脚本
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      # 数据持久化
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456789"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - wool-network
+
+  # Spring Boot 应用
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wool-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # 数据源配置（覆盖 application.yml 中的 localhost）
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wool_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456789
+      # 微信小程序配置（请替换为生产环境真实值）
+      WECHAT_APPID: wx74d1dae41082b9d5
+      WECHAT_SECRET: 5e7c93f81db16c9ee86a4c7233aa1f3b
+      # JWT 配置（请替换为生产环境强随机密钥）
+      JWT_SECRET: 9238eb16-e79a-4c7e-b80b-273d89175724
+      JWT_EXPIRATION: "604800000"
+      # 时区
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - wool-network
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  wool-network:
+    driver: bridge
