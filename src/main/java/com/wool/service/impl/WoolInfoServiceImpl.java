@@ -363,9 +363,9 @@ public class WoolInfoServiceImpl implements WoolInfoService {
                 thing1.put("value", title.length() > 20 ? title.substring(0, 20) + "..." : title);
                 data.put("thing1", thing1);
 
-                Map<String, String> phrase2 = new HashMap<>();
-                phrase2.put("value", "待审核");
-                data.put("phrase2", phrase2);
+                Map<String, String> thing2 = new HashMap<>();
+                thing2.put("value", "用户提交了新信息，请及时审核");
+                data.put("thing2", thing2);
 
                 boolean ok = wxSubscribeUtil.sendSubscribeMessage(openId, tplId, "pages/admin/admin?status=0", data);
                 if (ok) {
