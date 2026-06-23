@@ -93,7 +93,61 @@ public class AdminController {
     }
 
     /**
-     * 管理员订阅审核通知
+     * 查询当前管理员的订阅状态
+     * GET /api/admin/subscribe/status
+     */
+    @GetMapping("/subscribe/status")
+    public R<?> subscribeStatus(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        String openId = user.getOpenid();
+        LambdaQueryWrapper<AdminSubscribe> wrapper = new LambdaQueryWrapper<AdminSubscribe>()
+                .eq(AdminSubscribe::getOpenid, openId)
+                .eq(AdminSubscribe::getSubscribed, 1);
+        boolean subscribed = adminSubscribeMapper.selectCount(wrapper) > 0;
+        return R.ok(Map.of("subscribed", subscribed));
+    }
+
+    /**
+     * 切换订阅状态（开启/关闭）
+     * POST /api/admin/subscribe/toggle
+     */
+    @PostMapping("/subscribe/toggle")
+    public R<?> subscribeToggle(@RequestBody Map<String, String> body, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        String openId = user.getOpenid();
+        String templateId = body.get("templateId");
+
+        LambdaQueryWrapper<AdminSubscribe> wrapper = new LambdaQueryWrapper<AdminSubscribe>()
+                .eq(AdminSubscribe::getOpenid, openId)
+                .eq(AdminSubscribe::getTemplateId, templateId);
+        AdminSubscribe existing = adminSubscribeMapper.selectOne(wrapper);
+
+        if (existing != null) {
+            // 切换状态
+            existing.setSubscribed(existing.getSubscribed() == 1 ? 0 : 1);
+            adminSubscribeMapper.updateById(existing);
+            return R.ok(Map.of("subscribed", existing.getSubscribed() == 1));
+        } else {
+            // 首次订阅
+            AdminSubscribe subscribe = new AdminSubscribe();
+            subscribe.setOpenid(openId);
+            subscribe.setTemplateId(templateId);
+            subscribe.setSubscribed(1);
+            adminSubscribeMapper.insert(subscribe);
+            return R.ok(Map.of("subscribed", true));
+        }
+    }
+
+    /**
+     * 管理员订阅审核通知（保留兼容）
      * POST /api/admin/subscribe
      */
     @PostMapping("/subscribe")
