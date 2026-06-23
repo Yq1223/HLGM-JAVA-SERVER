@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -108,7 +110,7 @@ public class AdminController {
                 .eq(AdminSubscribe::getOpenid, openId)
                 .eq(AdminSubscribe::getSubscribed, 1);
         boolean subscribed = adminSubscribeMapper.selectCount(wrapper) > 0;
-        return R.ok(Map.of("subscribed", subscribed));
+        return R.ok(Collections.singletonMap("subscribed", subscribed));
     }
 
     /**
@@ -134,7 +136,7 @@ public class AdminController {
             // 切换状态
             existing.setSubscribed(existing.getSubscribed() == 1 ? 0 : 1);
             adminSubscribeMapper.updateById(existing);
-            return R.ok(Map.of("subscribed", existing.getSubscribed() == 1));
+            return R.ok(Collections.singletonMap("subscribed", existing.getSubscribed() == 1));
         } else {
             // 首次订阅
             AdminSubscribe subscribe = new AdminSubscribe();
@@ -142,7 +144,7 @@ public class AdminController {
             subscribe.setTemplateId(templateId);
             subscribe.setSubscribed(1);
             adminSubscribeMapper.insert(subscribe);
-            return R.ok(Map.of("subscribed", true));
+            return R.ok(Collections.singletonMap("subscribed", true));
         }
     }
 
