@@ -34,6 +34,7 @@ public class WxSubscribeUtil {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public WxSubscribeUtil() {
+        RestTemplate rt;
         try {
             // 信任所有证书（解决容器环境 SSL 证书链不完整的问题）
             TrustStrategy trustAll = (X509Certificate[] chain, String authType) -> true;
@@ -53,12 +54,13 @@ public class WxSubscribeUtil {
             factory.setConnectTimeout(10000);
             factory.setConnectionRequestTimeout(10000);
 
-            this.restTemplate = new RestTemplate(factory);
+            rt = new RestTemplate(factory);
             log.info("[WxSubscribeUtil] RestTemplate 初始化成功（已信任所有SSL证书）");
         } catch (Exception e) {
             log.error("[WxSubscribeUtil] SSL初始化失败，使用默认RestTemplate", e);
-            this.restTemplate = new RestTemplate();
+            rt = new RestTemplate();
         }
+        this.restTemplate = rt;
     }
 
     /**
