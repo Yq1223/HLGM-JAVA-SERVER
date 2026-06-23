@@ -347,29 +347,35 @@ public class WoolInfoServiceImpl implements WoolInfoService {
             List<AdminSubscribe> subscribers = adminSubscribeMapper.selectList(wrapper);
 
             if (subscribers.isEmpty()) {
-                log.info("无管理员订阅审核通知，跳过");
+                log.warn("[通知] 无管理员订阅审核通知，跳过。请确认 t_admin_subscribe 表中是否有 subscribed=1 的记录");
                 return;
             }
 
-            List<String> openIds = subscribers.stream()
-                    .map(AdminSubscribe::getOpenid)
-                    .collect(Collectors.toList());
+            log.info("[通知] 找到{}位订阅管理员: {}", subscribers.size(),
+                    subscribers.stream().map(AdminSubscribe::getOpenid).collect(Collectors.joining(", ")));
 
-            String tplId = subscribers.get(0).getTemplateId();
+            for (AdminSubscribe subscriber : subscribers) {
+                String openId = subscriber.getOpenid();
+                String tplId = subscriber.getTemplateId();
 
-            Map<String, Object> data = new HashMap<>();
-            Map<String, String> thing1 = new HashMap<>();
-            thing1.put("value", title.length() > 20 ? title.substring(0, 20) + "..." : title);
-            data.put("thing1", thing1);
+                Map<String, Object> data = new HashMap<>();
+                Map<String, String> thing1 = new HashMap<>();
+                thing1.put("value", title.length() > 20 ? title.substring(0, 20) + "..." : title);
+                data.put("thing1", thing1);
 
-            Map<String, String> phrase2 = new HashMap<>();
-            phrase2.put("value", "待审核");
-            data.put("phrase2", phrase2);
+                Map<String, String> phrase2 = new HashMap<>();
+                phrase2.put("value", "待审核");
+                data.put("phrase2", phrase2);
 
-            wxSubscribeUtil.sendSubscribeMessage(openIds, tplId, "pages/admin/admin?status=0", data);
-            log.info("已发送审核通知给{}位管理员", openIds.size());
+                boolean ok = wxSubscribeUtil.sendSubscribeMessage(openId, tplId, "pages/admin/admin?status=0", data);
+                if (ok) {
+                    log.info("[通知] 发送成功: openId={}, tplId={}", openId, tplId);
+                } else {
+                    log.error("[通知] 发送失败: openId={}, tplId={}", openId, tplId);
+                }
+            }
         } catch (Exception e) {
-            log.error("发送审核通知失败", e);
+            log.error("[通知] 发送审核通知异常", e);
         }
     }
 }

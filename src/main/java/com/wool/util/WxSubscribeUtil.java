@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Component
@@ -34,46 +33,61 @@ public class WxSubscribeUtil {
         try {
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
             Map<String, Object> map = objectMapper.readValue(resp.getBody(), Map.class);
-            return (String) map.get("access_token");
+            if (map.containsKey("access_token")) {
+                log.info("[access_token] 获取成功");
+                return (String) map.get("access_token");
+            } else {
+                log.error("[access_token] 获取失败: errcode={}, errmsg={}", map.get("errcode"), map.get("errmsg"));
+                return null;
+            }
         } catch (Exception e) {
-            log.error("获取access_token失败", e);
+            log.error("[access_token] 获取异常", e);
             return null;
         }
     }
 
     /**
-     * 发送订阅消息
-     * @param openIds  接收者的 openid 列表
-     * @param tplId    模板 ID
-     * @param page     点击消息跳转的小程序页面
-     * @param data     模板数据
+     * 发送订阅消息（单个用户）
+     * @param openId  接收者的 openid
+     * @param tplId   模板 ID
+     * @param page    点击消息跳转的小程序页面
+     * @param data    模板数据
+     * @return true=发送成功, false=发送失败
      */
-    public void sendSubscribeMessage(List<String> openIds, String tplId, String page, Map<String, Object> data) {
+    public boolean sendSubscribeMessage(String openId, String tplId, String page, Map<String, Object> data) {
         String accessToken = getAccessToken();
         if (accessToken == null) {
-            log.error("无法获取access_token，跳过发送订阅消息");
-            return;
+            log.error("[订阅消息] 无法获取access_token，跳过发送");
+            return false;
         }
 
         String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + accessToken;
 
-        for (String openId : openIds) {
-            try {
-                Map<String, Object> body = new HashMap<>();
-                body.put("touser", openId);
-                body.put("template_id", tplId);
-                body.put("page", page);
-                body.put("data", data);
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("touser", openId);
+            body.put("template_id", tplId);
+            body.put("page", page);
+            body.put("data", data);
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(body), headers);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(body), headers);
 
-                ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-                log.info("订阅消息发送结果: openId={}, resp={}", openId, resp.getBody());
-            } catch (Exception e) {
-                log.error("订阅消息发送失败: openId={}", openId, e);
+            ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
+            log.info("[订阅消息] 微信API响应: openId={}, status={}, body={}", openId, resp.getStatusCode(), resp.getBody());
+
+            // 解析微信返回的错误码
+            Map<String, Object> result = objectMapper.readValue(resp.getBody(), Map.class);
+            Integer errcode = (Integer) result.get("errcode");
+            if (errcode != null && errcode != 0) {
+                log.error("[订阅消息] 微信返回错误: errcode={}, errmsg={}, openId={}", errcode, result.get("errmsg"), openId);
+                return false;
             }
+            return true;
+        } catch (Exception e) {
+            log.error("[订阅消息] 发送异常: openId={}", openId, e);
+            return false;
         }
     }
 }
