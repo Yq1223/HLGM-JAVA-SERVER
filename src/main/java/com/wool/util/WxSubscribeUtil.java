@@ -22,8 +22,17 @@ public class WxSubscribeUtil {
     @Value("${wechat.secret}")
     private String secret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public WxSubscribeUtil() {
+        // 配置超时时间
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory =
+                new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10000);  // 连接超时10秒
+        factory.setReadTimeout(10000);     // 读取超时10秒
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     /**
      * 获取 access_token
@@ -31,7 +40,9 @@ public class WxSubscribeUtil {
     private String getAccessToken() {
         String url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appId + "&secret=" + secret;
         try {
+            log.info("[access_token] 请求微信接口, appid={}", appId);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+            log.info("[access_token] 微信响应: status={}, body={}", resp.getStatusCode(), resp.getBody());
             Map<String, Object> map = objectMapper.readValue(resp.getBody(), Map.class);
             if (map.containsKey("access_token")) {
                 log.info("[access_token] 获取成功");
@@ -41,7 +52,7 @@ public class WxSubscribeUtil {
                 return null;
             }
         } catch (Exception e) {
-            log.error("[access_token] 获取异常", e);
+            log.error("[access_token] 获取异常: type={}, message={}", e.getClass().getName(), e.getMessage());
             return null;
         }
     }
