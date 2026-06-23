@@ -1,13 +1,21 @@
 package com.wool.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.SSLContext;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,12 +34,31 @@ public class WxSubscribeUtil {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public WxSubscribeUtil() {
-        // 配置超时时间
-        org.springframework.http.client.SimpleClientHttpRequestFactory factory =
-                new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(10000);  // 连接超时10秒
-        factory.setReadTimeout(10000);     // 读取超时10秒
-        this.restTemplate = new RestTemplate(factory);
+        try {
+            // 信任所有证书（解决容器环境 SSL 证书链不完整的问题）
+            TrustStrategy trustAll = (X509Certificate[] chain, String authType) -> true;
+            SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                    .loadTrustMaterial(null, trustAll)
+                    .build();
+
+            SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
+                    sslContext, NoopHostnameVerifier.INSTANCE);
+
+            CloseableHttpClient httpClient = HttpClients.custom()
+                    .setSSLSocketFactory(socketFactory)
+                    .build();
+
+            HttpComponentsClientHttpRequestFactory factory =
+                    new HttpComponentsClientHttpRequestFactory(httpClient);
+            factory.setConnectTimeout(10000);
+            factory.setConnectionRequestTimeout(10000);
+
+            this.restTemplate = new RestTemplate(factory);
+            log.info("[WxSubscribeUtil] RestTemplate 初始化成功（已信任所有SSL证书）");
+        } catch (Exception e) {
+            log.error("[WxSubscribeUtil] SSL初始化失败，使用默认RestTemplate", e);
+            this.restTemplate = new RestTemplate();
+        }
     }
 
     /**
