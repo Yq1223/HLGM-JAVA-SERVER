@@ -233,10 +233,11 @@ public class WoolInfoServiceImpl implements WoolInfoService {
     }
 
     @Override
-    public Page<WoolInfoVO> myList(Long userId, int pageNum, int pageSize) {
+    public Page<WoolInfoVO> myList(Long userId, int pageNum, int pageSize, Integer status) {
         Page<WoolInfo> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<WoolInfo> wrapper = new LambdaQueryWrapper<WoolInfo>()
                 .eq(WoolInfo::getUserId, userId)
+                .eq(status != null, WoolInfo::getStatus, status)
                 .orderByDesc(WoolInfo::getCreatedAt);
 
         Page<WoolInfo> result = woolInfoMapper.selectPage(page, wrapper);

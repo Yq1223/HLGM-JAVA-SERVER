@@ -85,15 +85,16 @@ public class WoolInfoController {
 
     /**
      * 查询我的信息
-     * GET /api/wool/mine?pageNum=1&pageSize=10
+     * GET /api/wool/mine?pageNum=1&pageSize=10&status=0
      */
     @GetMapping("/mine")
     public R<Page<WoolInfoVO>> mine(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) Integer status,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
-        Page<WoolInfoVO> page = woolInfoService.myList(userId, pageNum, pageSize);
+        Page<WoolInfoVO> page = woolInfoService.myList(userId, pageNum, pageSize, status);
         return R.ok(page);
     }
 

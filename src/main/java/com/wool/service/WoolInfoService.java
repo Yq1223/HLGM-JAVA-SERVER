@@ -57,7 +57,7 @@ public interface WoolInfoService {
     /**
      * 查询我的信息
      */
-    Page<WoolInfoVO> myList(Long userId, int pageNum, int pageSize);
+    Page<WoolInfoVO> myList(Long userId, int pageNum, int pageSize, Integer status);
 
     /**
      * 批量导入薅羊毛信息
