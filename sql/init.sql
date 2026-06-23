@@ -84,6 +84,16 @@ CREATE TABLE `t_exchange_record` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='兑换记录表';
 
+CREATE TABLE `t_admin_subscribe` (
+    `id`         BIGINT      NOT NULL AUTO_INCREMENT,
+    `openid`     VARCHAR(64) NOT NULL COMMENT '管理员openid',
+    `template_id` VARCHAR(128) NOT NULL COMMENT '订阅的模板ID',
+    `subscribed` TINYINT     NOT NULL DEFAULT 1 COMMENT '是否已订阅: 0=否, 1=是',
+    `updated_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_openid_tpl` (`openid`, `template_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员订阅信息表';
+
 -- 初始管理员账号(需手动设置openid)
 -- INSERT INTO t_user (openid, nickname, role) VALUES ('admin_openid', '管理员', 1);
 

@@ -12,6 +12,7 @@ E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\common\WoolStat
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\entity\PointsLog.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\dto\ExchangeDTO.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\AuthService.java
+E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\mapper\AdminSubscribeMapper.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\dto\WoolInfoDTO.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\entity\WoolInfo.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\config\MyMetaObjectHandler.java
@@ -35,11 +36,13 @@ E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\vo\WoolInfoVO.j
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\mapper\WoolInfoMapper.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\WoolInfoService.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\entity\ExchangeRecord.java
+E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\util\WxSubscribeUtil.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\controller\WoolInfoController.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\common\Constants.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\vo\ImportResultVO.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\ExchangeService.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\vo\PointsLogVO.java
+E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\entity\AdminSubscribe.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\PointsService.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\impl\WoolInfoServiceImpl.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\WoolApplication.java

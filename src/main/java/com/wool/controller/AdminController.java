@@ -1,15 +1,21 @@
 package com.wool.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wool.common.Constants;
 import com.wool.common.R;
 import com.wool.dto.AuditDTO;
+import com.wool.entity.AdminSubscribe;
+import com.wool.entity.User;
+import com.wool.mapper.AdminSubscribeMapper;
+import com.wool.mapper.UserMapper;
 import com.wool.service.WoolInfoService;
 import com.wool.vo.WoolInfoVO;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Map;
 
 /**
  * 管理员接口 (所有接口需管理员权限)
@@ -19,9 +25,13 @@ import javax.validation.Valid;
 public class AdminController {
 
     private final WoolInfoService woolInfoService;
+    private final AdminSubscribeMapper adminSubscribeMapper;
+    private final UserMapper userMapper;
 
-    public AdminController(WoolInfoService woolInfoService) {
+    public AdminController(WoolInfoService woolInfoService, AdminSubscribeMapper adminSubscribeMapper, UserMapper userMapper) {
         this.woolInfoService = woolInfoService;
+        this.adminSubscribeMapper = adminSubscribeMapper;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -79,6 +89,38 @@ public class AdminController {
     public R<?> delete(@PathVariable Long id, HttpServletRequest request) {
         Long adminId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
         woolInfoService.adminDelete(id, adminId);
+        return R.ok();
+    }
+
+    /**
+     * 管理员订阅审核通知
+     * POST /api/admin/subscribe
+     */
+    @PostMapping("/subscribe")
+    public R<?> subscribe(@RequestBody Map<String, String> body, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute(Constants.ATTR_USER_ID);
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        String openId = user.getOpenid();
+        String templateId = body.get("templateId");
+
+        LambdaQueryWrapper<AdminSubscribe> wrapper = new LambdaQueryWrapper<AdminSubscribe>()
+                .eq(AdminSubscribe::getOpenid, openId)
+                .eq(AdminSubscribe::getTemplateId, templateId);
+        AdminSubscribe existing = adminSubscribeMapper.selectOne(wrapper);
+
+        if (existing != null) {
+            existing.setSubscribed(1);
+            adminSubscribeMapper.updateById(existing);
+        } else {
+            AdminSubscribe subscribe = new AdminSubscribe();
+            subscribe.setOpenid(openId);
+            subscribe.setTemplateId(templateId);
+            subscribe.setSubscribed(1);
+            adminSubscribeMapper.insert(subscribe);
+        }
         return R.ok();
     }
 }

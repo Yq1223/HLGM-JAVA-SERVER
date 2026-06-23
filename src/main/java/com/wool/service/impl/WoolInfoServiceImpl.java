@@ -13,10 +13,13 @@ import com.wool.dto.WoolInfoDTO;
 import com.wool.dto.WoolInfoImportDTO;
 import com.wool.entity.User;
 import com.wool.entity.WoolInfo;
+import com.wool.entity.AdminSubscribe;
+import com.wool.mapper.AdminSubscribeMapper;
 import com.wool.mapper.UserMapper;
 import com.wool.mapper.WoolInfoMapper;
 import com.wool.service.PointsService;
 import com.wool.service.WoolInfoService;
+import com.wool.util.WxSubscribeUtil;
 import com.wool.vo.ImportResultVO;
 import com.wool.vo.WoolInfoVO;
 import org.slf4j.Logger;
@@ -28,6 +31,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,11 +47,16 @@ public class WoolInfoServiceImpl implements WoolInfoService {
     private final WoolInfoMapper woolInfoMapper;
     private final UserMapper userMapper;
     private final PointsService pointsService;
+    private final AdminSubscribeMapper adminSubscribeMapper;
+    private final WxSubscribeUtil wxSubscribeUtil;
 
-    public WoolInfoServiceImpl(WoolInfoMapper woolInfoMapper, UserMapper userMapper, PointsService pointsService) {
+    public WoolInfoServiceImpl(WoolInfoMapper woolInfoMapper, UserMapper userMapper, PointsService pointsService,
+                               AdminSubscribeMapper adminSubscribeMapper, WxSubscribeUtil wxSubscribeUtil) {
         this.woolInfoMapper = woolInfoMapper;
         this.userMapper = userMapper;
         this.pointsService = pointsService;
+        this.adminSubscribeMapper = adminSubscribeMapper;
+        this.wxSubscribeUtil = wxSubscribeUtil;
     }
 
     @Override
@@ -101,6 +113,7 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         info.setViewCount(0);
         woolInfoMapper.insert(info);
         log.info("用户[{}]发布羊毛信息[id={}]，待审核", userId, info.getId());
+        notifyAdminsForReview(info.getTitle());
         return info.getId();
     }
 
@@ -120,6 +133,7 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         info.setRejectReason("");
         woolInfoMapper.updateById(info);
         log.info("用户[{}]修改羊毛信息[id={}]，重置为待审核", userId, id);
+        notifyAdminsForReview(info.getTitle());
     }
 
     @Override
@@ -321,5 +335,41 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         WoolStatus ws = WoolStatus.of(info.getStatus());
         vo.setStatusDesc(ws != null ? ws.desc : "未知");
         return vo;
+    }
+
+    /**
+     * 通知管理员审核新提交的信息
+     */
+    private void notifyAdminsForReview(String title) {
+        try {
+            LambdaQueryWrapper<AdminSubscribe> wrapper = new LambdaQueryWrapper<AdminSubscribe>()
+                    .eq(AdminSubscribe::getSubscribed, 1);
+            List<AdminSubscribe> subscribers = adminSubscribeMapper.selectList(wrapper);
+
+            if (subscribers.isEmpty()) {
+                log.info("无管理员订阅审核通知，跳过");
+                return;
+            }
+
+            List<String> openIds = subscribers.stream()
+                    .map(AdminSubscribe::getOpenid)
+                    .collect(Collectors.toList());
+
+            String tplId = subscribers.get(0).getTemplateId();
+
+            Map<String, Object> data = new HashMap<>();
+            Map<String, String> thing1 = new HashMap<>();
+            thing1.put("value", title.length() > 20 ? title.substring(0, 20) + "..." : title);
+            data.put("thing1", thing1);
+
+            Map<String, String> phrase2 = new HashMap<>();
+            phrase2.put("value", "待审核");
+            data.put("phrase2", phrase2);
+
+            wxSubscribeUtil.sendSubscribeMessage(openIds, tplId, "pages/admin/admin?status=0", data);
+            log.info("已发送审核通知给{}位管理员", openIds.size());
+        } catch (Exception e) {
+            log.error("发送审核通知失败", e);
+        }
     }
 }
