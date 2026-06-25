@@ -25,14 +25,15 @@ public class WoolInfoController {
 
     /**
      * 获取已上线信息列表(公开，无需登录)
-     * GET /api/wool/list?pageNum=1&pageSize=10&keyword=xxx
+     * GET /api/wool/list?pageNum=1&pageSize=10&keyword=xxx&category=会员
      */
     @GetMapping("/list")
     public R<Page<WoolInfoVO>> list(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
-            @RequestParam(required = false) String keyword) {
-        Page<WoolInfoVO> page = woolInfoService.listOnline(pageNum, pageSize, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category) {
+        Page<WoolInfoVO> page = woolInfoService.listOnline(pageNum, pageSize, keyword, category);
         return R.ok(page);
     }
 

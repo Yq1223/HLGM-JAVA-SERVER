@@ -12,7 +12,7 @@ public interface WoolInfoService {
     /**
      * 分页查询已上线信息(公开)
      */
-    Page<WoolInfoVO> listOnline(int pageNum, int pageSize, String keyword);
+    Page<WoolInfoVO> listOnline(int pageNum, int pageSize, String keyword, String category);
 
     /**
      * 查看详情(需登录, 校验状态)

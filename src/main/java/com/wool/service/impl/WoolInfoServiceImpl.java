@@ -60,14 +60,15 @@ public class WoolInfoServiceImpl implements WoolInfoService {
     }
 
     @Override
-    public Page<WoolInfoVO> listOnline(int pageNum, int pageSize, String keyword) {
+    public Page<WoolInfoVO> listOnline(int pageNum, int pageSize, String keyword, String category) {
         Page<WoolInfo> page = new Page<>(pageNum, pageSize);
         QueryWrapper<WoolInfo> wrapper = new QueryWrapper<>();
         wrapper.eq("status", WoolStatus.ONLINE.code)
                .like(StringUtils.hasText(keyword), "title", keyword)
+               .eq(StringUtils.hasText(category), "category", category)
                .orderByDesc("created_at");
 
-        log.info("查询已上线信息: status={}, keyword={}", WoolStatus.ONLINE.code, keyword);
+        log.info("查询已上线信息: status={}, keyword={}, category={}", WoolStatus.ONLINE.code, keyword, category);
         Page<WoolInfo> result = woolInfoMapper.selectPage(page, wrapper);
         log.info("查询结果: total={}, records={}", result.getTotal(), result.getRecords().size());
         return convertPage(result);
