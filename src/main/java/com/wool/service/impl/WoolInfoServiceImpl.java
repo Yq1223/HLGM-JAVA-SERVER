@@ -141,11 +141,23 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         }
 
         BeanUtils.copyProperties(dto, info);
-        info.setStatus(WoolStatus.PENDING.code);
-        info.setRejectReason("");
-        woolInfoMapper.updateById(info);
-        log.info("用户[{}]修改羊毛信息[id={}]，重置为待审核", userId, id);
-        notifyAdminsForReview(info.getTitle());
+        
+        // 查询用户角色，管理员编辑直接上线，普通用户需要审核
+        User user = userMapper.selectById(userId);
+        boolean isAdmin = user != null && user.getRole() != null && user.getRole() == Constants.ROLE_ADMIN;
+        
+        if (isAdmin) {
+            info.setStatus(WoolStatus.ONLINE.code);
+            info.setRejectReason("");
+            woolInfoMapper.updateById(info);
+            log.info("管理员[{}]修改羊毛信息[id={}]，直接上线", userId, id);
+        } else {
+            info.setStatus(WoolStatus.PENDING.code);
+            info.setRejectReason("");
+            woolInfoMapper.updateById(info);
+            log.info("用户[{}]修改羊毛信息[id={}]，重置为待审核", userId, id);
+            notifyAdminsForReview(info.getTitle());
+        }
     }
 
     @Override
