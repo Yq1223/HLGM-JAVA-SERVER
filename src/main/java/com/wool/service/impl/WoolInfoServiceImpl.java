@@ -109,11 +109,23 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         WoolInfo info = new WoolInfo();
         BeanUtils.copyProperties(dto, info);
         info.setUserId(userId);
-        info.setStatus(WoolStatus.PENDING.code);
-        info.setViewCount(0);
-        woolInfoMapper.insert(info);
-        log.info("用户[{}]发布羊毛信息[id={}]，待审核", userId, info.getId());
-        notifyAdminsForReview(info.getTitle());
+        
+        // 查询用户角色，管理员发布直接上线，普通用户需要审核
+        User user = userMapper.selectById(userId);
+        boolean isAdmin = user != null && user.getRole() != null && user.getRole() == Constants.ROLE_ADMIN;
+        
+        if (isAdmin) {
+            info.setStatus(WoolStatus.ONLINE.code);
+            info.setViewCount(0);
+            woolInfoMapper.insert(info);
+            log.info("管理员[{}]发布羊毛信息[id={}]，直接上线", userId, info.getId());
+        } else {
+            info.setStatus(WoolStatus.PENDING.code);
+            info.setViewCount(0);
+            woolInfoMapper.insert(info);
+            log.info("用户[{}]发布羊毛信息[id={}]，待审核", userId, info.getId());
+            notifyAdminsForReview(info.getTitle());
+        }
         return info.getId();
     }
 
@@ -250,6 +262,10 @@ public class WoolInfoServiceImpl implements WoolInfoService {
         ImportResultVO result = new ImportResultVO();
         List<WoolInfoImportDTO> dataList = new ArrayList<>();
 
+        // 查询用户角色，管理员导入直接上线，普通用户需要审核
+        User user = userMapper.selectById(userId);
+        boolean isAdmin = user != null && user.getRole() != null && user.getRole() == Constants.ROLE_ADMIN;
+
         // 1. 读取Excel文件
         try {
             EasyExcel.read(file.getInputStream(), WoolInfoImportDTO.class, new ReadListener<WoolInfoImportDTO>() {
@@ -299,12 +315,13 @@ public class WoolInfoServiceImpl implements WoolInfoService {
             info.setCategory(dto.getCategory() != null ? dto.getCategory().trim() : "");
             info.setSourceUrl(dto.getSourceUrl() != null ? dto.getSourceUrl().trim() : "");
             info.setClaimSteps(dto.getClaimSteps() != null ? dto.getClaimSteps().trim() : "");
-            info.setStatus(WoolStatus.PENDING.code);
+            info.setStatus(isAdmin ? WoolStatus.ONLINE.code : WoolStatus.PENDING.code);
             info.setViewCount(0);
 
             woolInfoMapper.insert(info);
             result.addSuccess();
-            log.info("批量导入: 用户[{}]导入信息[id={}]，标题={}", userId, info.getId(), info.getTitle());
+            log.info("批量导入: {}[{}]导入信息[id={}]，标题={}", 
+                    isAdmin ? "管理员" : "用户", userId, info.getId(), info.getTitle());
         }
 
         log.info("批量导入完成: 成功{}条, 失败{}条", result.getSuccessCount(), result.getFailCount());
