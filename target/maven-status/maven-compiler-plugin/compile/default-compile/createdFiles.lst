@@ -1,5 +1,8 @@
+com\wool\mapper\FeedbackMapper.class
+com\wool\dto\FeedbackDTO.class
 com\wool\interceptor\AdminInterceptor.class
 com\wool\mapper\ExchangeGoodsMapper.class
+com\wool\service\FeedbackService.class
 com\wool\common\R.class
 com\wool\entity\User.class
 com\wool\mapper\WoolInfoMapper.class
@@ -11,6 +14,7 @@ com\wool\mapper\ExchangeRecordMapper.class
 com\wool\common\Constants.class
 com\wool\config\MybatisPlusConfig.class
 com\wool\config\MyMetaObjectHandler.class
+com\wool\controller\FeedbackController.class
 com\wool\mapper\PointsLogMapper.class
 com\wool\dto\WxLoginDTO.class
 com\wool\common\BizException.class
@@ -26,6 +30,7 @@ com\wool\entity\PointsLog.class
 com\wool\service\impl\AuthServiceImpl.class
 com\wool\WoolApplication.class
 com\wool\entity\WoolInfo.class
+com\wool\entity\Feedback.class
 com\wool\interceptor\AuthInterceptor.class
 com\wool\mapper\AdminSubscribeMapper.class
 com\wool\service\ExchangeService.class
@@ -34,10 +39,12 @@ com\wool\service\WoolInfoService.class
 com\wool\vo\ImportResultVO.class
 com\wool\dto\ExchangeDTO.class
 com\wool\entity\AdminSubscribe.class
+com\wool\service\impl\FeedbackServiceImpl.class
 com\wool\common\WoolStatus.class
 com\wool\service\impl\PointsServiceImpl.class
 com\wool\controller\WoolInfoController.class
 com\wool\service\impl\WoolInfoServiceImpl.class
+com\wool\dto\FeedbackAuditDTO.class
 com\wool\common\PointsChangeType.class
 com\wool\common\GlobalExceptionHandler.class
 com\wool\vo\PointsLogVO.class
@@ -47,3 +54,4 @@ com\wool\dto\AuditDTO.class
 com\wool\dto\WoolInfoDTO.class
 com\wool\controller\PointsController.class
 com\wool\service\impl\WoolInfoServiceImpl$1.class
+com\wool\vo\FeedbackVO.class
