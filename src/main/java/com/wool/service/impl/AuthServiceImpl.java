@@ -6,6 +6,7 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wool.common.BizException;
 import com.wool.dto.WxLoginDTO;
+import com.wool.dto.WxRegisterDTO;
 import com.wool.entity.User;
 import com.wool.mapper.UserMapper;
 import com.wool.service.AuthService;
@@ -53,26 +54,71 @@ public class AuthServiceImpl implements AuthService {
             throw new BizException("微信登录失败: " + json.getStr("errmsg"));
         }
 
-        // 2. 查找或创建用户
+        // 2. 查找用户
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getOpenid, openid));
 
+        LoginVO vo = new LoginVO();
+
         if (user == null) {
-            user = new User();
-            user.setOpenid(openid);
-            user.setNickname(dto.getNickname() != null ? dto.getNickname() : "微信用户");
-            user.setAvatarUrl(dto.getAvatarUrl() != null ? dto.getAvatarUrl() : "");
-            user.setRole(0);
-            user.setPoints(0);
-            user.setStatus(1);
-            userMapper.insert(user);
-            log.info("新用户注册: openid={}", openid);
+            // 新用户，返回标记
+            vo.setNeedRegister(true);
+            return vo;
         }
 
-        // 3. 生成JWT
+        // 3. 已有用户，生成JWT
         String token = jwtUtil.generateToken(user.getId(), user.getRole());
 
         // 4. 组装返回
+        vo.setToken(token);
+        vo.setUserId(user.getId());
+        vo.setNickname(user.getNickname());
+        vo.setAvatarUrl(user.getAvatarUrl());
+        vo.setRole(user.getRole());
+        vo.setPoints(user.getPoints());
+        vo.setNeedRegister(false);
+        return vo;
+    }
+
+    @Override
+    @Transactional
+    public LoginVO wxRegister(WxRegisterDTO dto) {
+        // 1. 调用微信接口获取openid
+        String url = String.format(
+                "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+                appid, secret, dto.getCode());
+
+        String resp = HttpUtil.get(url);
+        JSONObject json = JSONUtil.parseObj(resp);
+        log.info("微信注册响应: {}", resp);
+
+        String openid = json.getStr("openid");
+        if (openid == null) {
+            throw new BizException("微信登录失败: " + json.getStr("errmsg"));
+        }
+
+        // 2. 检查用户是否已存在
+        User existUser = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getOpenid, openid));
+        if (existUser != null) {
+            throw new BizException("用户已存在，请直接登录");
+        }
+
+        // 3. 创建用户
+        User user = new User();
+        user.setOpenid(openid);
+        user.setNickname(dto.getNickname() != null ? dto.getNickname() : "微信用户");
+        user.setAvatarUrl(dto.getAvatarUrl() != null ? dto.getAvatarUrl() : "");
+        user.setRole(0);
+        user.setPoints(0);
+        user.setStatus(1);
+        userMapper.insert(user);
+        log.info("新用户注册: openid={}", openid);
+
+        // 4. 生成JWT
+        String token = jwtUtil.generateToken(user.getId(), user.getRole());
+
+        // 5. 组装返回
         LoginVO vo = new LoginVO();
         vo.setToken(token);
         vo.setUserId(user.getId());
@@ -80,6 +126,7 @@ public class AuthServiceImpl implements AuthService {
         vo.setAvatarUrl(user.getAvatarUrl());
         vo.setRole(user.getRole());
         vo.setPoints(user.getPoints());
+        vo.setNeedRegister(false);
         return vo;
     }
 }

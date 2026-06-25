@@ -8,6 +8,7 @@ public class LoginVO {
     private String avatarUrl;
     private Integer role;
     private Integer points;
+    private boolean needRegister;  // 是否需要注册（新用户）
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
@@ -26,4 +27,7 @@ public class LoginVO {
 
     public Integer getPoints() { return points; }
     public void setPoints(Integer points) { this.points = points; }
+
+    public boolean isNeedRegister() { return needRegister; }
+    public void setNeedRegister(boolean needRegister) { this.needRegister = needRegister; }
 }

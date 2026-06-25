@@ -37,6 +37,7 @@ com\wool\service\ExchangeService.class
 com\wool\vo\WoolInfoVO.class
 com\wool\service\WoolInfoService.class
 com\wool\vo\ImportResultVO.class
+com\wool\dto\WxRegisterDTO.class
 com\wool\dto\ExchangeDTO.class
 com\wool\entity\AdminSubscribe.class
 com\wool\service\impl\FeedbackServiceImpl.class

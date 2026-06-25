@@ -24,6 +24,7 @@ E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\entity\Exchange
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\util\WxSubscribeUtil.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\controller\WoolInfoController.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\vo\ImportResultVO.java
+E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\dto\WxRegisterDTO.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\service\impl\WoolInfoServiceImpl.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\WoolApplication.java
 E:\project\LT2026.06.18_HLGM\wool-backend\src\main\java\com\wool\config\MybatisPlusConfig.java
