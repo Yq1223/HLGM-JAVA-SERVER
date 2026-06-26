@@ -143,6 +143,7 @@ public class FeedbackServiceImpl implements FeedbackService {
             case 0: return "待处理";
             case 1: return "进行中";
             case 2: return "已完成";
+            case 3: return "不处理";
             default: return "未知";
         }
     }
