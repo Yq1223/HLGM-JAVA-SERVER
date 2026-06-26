@@ -8,7 +8,7 @@ public class FeedbackAuditDTO {
 
     @NotNull(message = "状态不能为空")
     @Min(value = 0, message = "无效的状态")
-    @Max(value = 2, message = "无效的状态")
+    @Max(value = 3, message = "无效的状态")
     private Integer status;
 
     private String reply;
